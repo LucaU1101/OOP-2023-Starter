@@ -1,49 +1,64 @@
 package ie.tudublin;
-
 import java.util.ArrayList;
 
-public class Word {
+public class Word 
+{
     private String word;
-    private ArrayList<Follow> follows;
+    ArrayList<Follow> follows;
 
-    public Word(String word) {
+    public Word(String word)
+    {
         this.word = word;
-        this.follows = new ArrayList<Follow>();
+        this.follows = new ArrayList<>();
     }
 
-    public String getWord() {
-        return this.word;
+    public String getWord() 
+    {
+        return word;
     }
 
-    public ArrayList<Follow> getFollows() {
-        return this.follows;
+    public ArrayList<Follow> getFollows() 
+    {
+        return follows;
     }
 
-    public void addFollow(String follow) {
-        // Check if the follow already exists in the list
-        for (Follow f : this.follows) {
-            if (f.getWord().equals(follow)) {
-                f.incrementCount();
-                return;
+    public void addFollow(String followWord) 
+    {
+        Follow follow = findFollow(followWord);
+        if(follow == null) 
+        {
+            follows.add(new Follow(followWord, 1));
+        } 
+        else 
+        {
+            follow.incrementCount();
+        }
+    }
+
+    public Follow findFollow(String followWord) 
+    {
+        for(Follow follow : follows) 
+        {
+            if (follow.getWord().equals(followWord)) {
+                return follow;
             }
         }
-        // If the follow doesn't exist, add it to the list
-        this.follows.add(new Follow(follow));
+        return null;
     }
 
-    public String toString() {
-        String output = this.word + ": ";
-        for (Follow f : this.follows) {
-            output += f.toString() + " ";
+    @Override
+    public String toString() 
+    {
+        String result = word + " -> ";
+
+    for (int i = 0; i < follows.size(); i++) {
+        Follow follow = follows.get(i);
+        result += follow.toString();
+        if (i < follows.size() - 1) {
+            result += ", ";
         }
-        return output;
     }
+    return result;
+    }
+
 }
-
-
-
-
-
-
-
-

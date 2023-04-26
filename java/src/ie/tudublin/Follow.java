@@ -1,13 +1,8 @@
 package ie.tudublin;
 
 public class Follow {
-    private String word;
-    private int count;
-
-    public Follow(String word, int count) {
-        this.word = word;
-        this.count = count;
-    }
+    String word;
+    int count;
 
     public String getWord() {
         return word;
@@ -17,11 +12,22 @@ public class Follow {
         return count;
     }
 
-    public String toString() {
-        return word + "(" + count + ")";
+    public Follow(String word, int count)
+    {
+        this.word = word;
+        this.count = count;
     }
+
+    @Override
+    public String toString() 
+    {
+        return word + ": " + count;
+    }
+
+    public void incrementCount() 
+    {
+        count++;
+    }
+
+    
 }
-
-
-
-

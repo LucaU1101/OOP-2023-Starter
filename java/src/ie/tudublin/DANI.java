@@ -1,182 +1,164 @@
 package ie.tudublin;
 
 import java.util.ArrayList;
-
+import java.util.Random;
 import processing.core.PApplet;
 
 public class DANI extends PApplet {
 
-	ArrayList<Word> model;
-	ArrayList<String> sonnect;
-	StringBuilder sb;
+    private ArrayList<Word> model;
+    private Random random;
 
-	public void settings() {
-		size(1000, 1000);
-		//fullScreen(SPAN);
-	}
+    public void settings() {
+        size(1000, 1000);
+        //fullScreen(SPAN);
+    }
+
+    public void setup() {
+        colorMode(HSB);
+        loadFile("shakespere.txt");
+        printModel();
+    }
 
     String[] sonnet;
 
-	public void setup() {
-		colorMode(HSB);
-		model = new ArrayList<Word>();
-		loadFile();
-		printModel();
-		writeSonnet();
-		printSonnet();
-       
-	}
-
-	public void keyPressed() {
-		if (key == ' ') {
-			writeSonnet();
-		}
-	}
-	public void loadFile()
-	{
-		String[] line = loadStrings("shakespere.txt");
-		for(int i = 0; i < line.length; i ++)
-		{
-			String[] words = split(line[i], " ");
-			for(int j = 0; j < words.length; j ++)
-			{
-				//get a word from line and create a word object, add it to model
-				//then get the next word and create a follow object, add it to the arraylist of follows in the word object
-				words[j] = words[j].replaceAll("[^a-zA-Z ]", "");
-				words[j] = words[j].toLowerCase();
-
-				//check if next word exist or not
-				boolean lastWord;
-				if(j+1 == words.length)
-				{
-					lastWord = true;
-				}
-				else
-				{
-					lastWord = false;
-				}
-				
-				if(!lastWord)
-				{
-					words[j+1] = words[j+1].replaceAll("[^a-zA-Z ]", "");
-					words[j+1] = words[j+1].toLowerCase();
-				}
-
-				int result = findWord(words[j]);
-				Word word;
-				//if word is not in model, add it
-				if(result == -1)
-				{
-					word = new Word(words[j]);
-					model.add(word);
-				}
-				else
-				{
-					word = model.get(result);
-				}
-
-				//check if follow for the word exist.
-				if(!lastWord)
-				{
-					if(word.findFollow(words[j+1]) == -1)
-					{
-						word.addFollow(new Follow(words[j+1], 1));
-					}
-					else
-					{
-						word.addFollowCount(word.getFollows().get(word.findFollow(words[j+1])));
-					}
-				}
-			}
-		}
-	}
-	public int findWord(String word)
-	{
-		for(int i = 0; i < model.size(); i ++)
-		{
-			if(model.get(i).getWord().equals(word))
-			{
-				return i;
-			}
-		}
-		return -1;
-	}
-	
-	public void printModel()
-	{
-		for(Word w:model)
-		{
-			System.out.println(w.toString());
-		}
-	}
-	public void writeSonnet()
-	{
-		sonnet = new String[14];
-		//loop 14 times to create 14 lines
-		for (int i = 0; i < 14; i++)
-		{
-			int r = (int) random(0, model.size());
-			Word w = model.get(r);
-			//use a string builder to build the sonnet line
-			sb = new StringBuilder();
-			sb.append(w.getWord() + " ");
-
-			//loop only iterate maximum of 7 times because already have 1 word
-			for(int k = 0; k < 7;k++)
-			{
-				int r2;
-				//if current word has no follows, break the loop and stop sentence.
-				if(w.getFollows().size() == 0)
-				{
-					break;
-				}
-				//otherwise, get a random follow from the arraylist of follows
-				else
-				{
-					r2 = (int) random(0, w.getFollows().size());
-				}
-				
-				//append the follow to the string builder
-				//set the follow as next word by looking the string of follow in the model to find the word object for this string
-				Follow f = w.getFollows().get(r2);
-				sb.append(f.getWord() + " ");
-				w = model.get(findWord(f.getWord()));
-
-			}
-			String s = sb.toString();
-			sonnet[i] = s;
-		}
-	}
-	public void printSonnet()
-	{
-		for(String s:sonnet)
-		{
-			System.out.println(s);
-		}
-	}
-
-	float off = 0;
-
-	public void draw() 
+    public DANI() 
     {
-		background(0);
-		fill(255);
-		noStroke();
-		textSize(20);
-        textAlign(CENTER, CENTER);
-		int gap = 50;
-		for(int i = 0;i<sonnet.length;i++)
-		{
-			text(sonnet[i], width/2, gap + i * gap);
-		}
-        
-	}
-}
-  
-  
-  
-  
+        model = new ArrayList<>();
+        random = new Random();
+    }
 
+	public void loadFile(String file)
+    {
+        String[] lines = loadStrings(file);
+
+        for(String line:lines) 
+        {
+            String[] words = split(line, ' ');
+    
+            for(int i = 0; i < words.length - 1; i++) 
+            {
+                String currentWord = words[i].replaceAll("[^\\w\\s]", "").toLowerCase();
+                String nextWord = words[i + 1].replaceAll("[^\\w\\s]", "").toLowerCase();
+
+                if (currentWord.isEmpty() || nextWord.isEmpty()) 
+                {
+                    continue;
+                }
+    
+                Word word = findWord(currentWord);
+                if(word == null) 
+                {
+                    word = new Word(currentWord);
+                    model.add(word);
+                }
+                word.addFollow(nextWord);
+            }
+        }
+    }
+
+    public String[] writeSonnet()
+    {
+        String[] sonnet = new String[14];
+
+
+        for (int i = 0; i < 14; i++) {
+            sonnet[i] = writeLine();
+        }
+        return sonnet;
+    }
+
+    public String writeLine() {
+		StringBuilder sb = new StringBuilder();
+		Word currentWord = model.get(random.nextInt(model.size()));
+		int wordCount = 0;
+	
+		while (wordCount < 7) {
+			sb.append(currentWord.getWord()).append(" ");
+			ArrayList<Follow> follows = currentWord.getFollows();
+	
+			if (follows.isEmpty()) {
+				break;
+			}
+	
+			Follow nextFollow = follows.get(random.nextInt(follows.size()));
+			currentWord = findWord(nextFollow.getWord());
+	
+			if (currentWord == null) {
+				break;
+			}
+	
+			wordCount++;
+		}
+	
+		return sb.toString().trim();
+	}
+
+    
+
+    public Word findWord(String word) 
+    {
+        for(Word w:model) 
+        {
+            if(w.getWord().equals(word)) 
+            {
+                return w;
+            }
+        }
+        return null;
+    }
+
+    public void printModel() 
+    {
+        for (Word word : model) 
+        {
+            System.out.print(word.getWord() + ": ");
+            ArrayList<Follow> follows = word.getFollows();
+            for (int i = 0; i < follows.size(); i++) 
+            {
+                Follow follow = follows.get(i);
+                System.out.print(follow.getWord() + "(" + follow.getCount() + ")");
+                if (i < follows.size() - 1) 
+                {
+                    System.out.print(" ");
+                }
+            }
+            System.out.println();
+        }
+    }
+
+
+    public void keyPressed() {
+        if(key == ' ') 
+        {
+            sonnet = writeSonnet();
+            for (String line : sonnet) 
+            {
+                System.out.println(line);
+            }
+        }
+    }
+
+    float off = 0;
+
+    public void draw() 
+    {
+        background(0);
+        fill(255);
+        noStroke();
+        textSize(20);
+        textAlign(CENTER, CENTER);
+        
+        if(sonnet != null) 
+        {
+			int y = 50;
+			for (String line : sonnet) {
+				text(line, width / 2, y);
+				y += 50;
+            }
+        }
+    }
+}
 
 
 
